@@ -8,7 +8,7 @@
 #include<unistd.h> /* For getpid */
 
 #define THREAD_STACK 1024*64
-#define MAX_THREADS 4
+#define MAX_THREADS 10
 
 typedef struct thread_t {
 	int tid;
@@ -96,6 +96,22 @@ int thread_kill(thread_t thread, int signo){
 	return kill(thread.pid, signo);
 }
 
-int thread_exit(void *retval){
-	
+void thread_exit(void *retval){
+	int nowpid = getpid();
+	for(int i = 0; i < MAX_THREADS; i++){
+		if(thread_array[i].pid == nowpid){
+			if(kill(nowpid, 9) == -1)
+			{
+
+				retval = (void*)-1;
+				return;
+			}
+			free(thread_array[i].stack);
+			thread_array[i].stack = NULL;
+			retval = (void*)0;
+			return;
+		}
+	}
+	// Terminate the main thread
+	exit(0);
 }

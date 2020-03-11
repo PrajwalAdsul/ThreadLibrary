@@ -5,7 +5,17 @@
 void* fun1(void *args){
 	int i = 0;
 	while(i < 50){
-	 printf("%d Fun1\n", i);
+		printf("Fun1\n");
+	
+		// Uncomment this to test thread_exit
+		/*
+		if(i == 5){
+			void *retval;
+			thread_exit(&retval);
+	 	}
+		*/
+
+	 // printf("%d Fun1 %d\n", i, getpid());
 	 i++;	
 	}
 }
@@ -13,7 +23,8 @@ void* fun1(void *args){
 void* fun2(void *args){
 	int i = 0;
 	while(i < 50){
-	 printf("%d Fun2\n", i);
+		printf("Fun2\n");
+	 // printf("%d Fun2 %d\n", i, getpid());
 	 i++;
 	}
 }
@@ -40,7 +51,8 @@ void* fibonacci(void *ags)
 	for( i = 2; i < 7; ++ i )
 	{
 		int nextFib = fib[0] + fib[1];
-		printf( "fibonacchi(%d) = %d\n", i, nextFib );
+		printf( "fibonacchi(%d) = %d\n", i, nextFib);
+		// printf( "fibonacchi(%d) = %d %d\n", i, nextFib, getpid());
 		fib[0] = fib[1];
 		fib[1] = nextFib;
 	}
@@ -76,11 +88,13 @@ int main()
 
 	thread_create( &t1, fun1 , NULL);
 	thread_create( &t2, fun2 , NULL);
-	
+
 	/* Since these are nonpre-emptive, we must allow them to run */
 	thread_join(t3);
 	thread_join(t1);
 	thread_join(t2);
+
+
 	//pthread_join(t3, NULL);
 	
 	/* The program quits */
