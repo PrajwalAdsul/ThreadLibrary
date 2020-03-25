@@ -1,17 +1,23 @@
 #define _GNU_SOURCE
 #include<sched.h>
-#include<stdio.h> 
-#include<signal.h>
+
+#include<stdio.h> /* For clone */
+#include<signal.h> /* For SIGCHLD */
 #include<stdlib.h>
-#include<sys/types.h>
-#include<sys/wait.h>
-#include<unistd.h>
-#include<asm-generic/errno.h>
+#include<sys/types.h> /* For pid_t */
+#include<sys/wait.h> /* For wait */
+#include<unistd.h> /* For getpid */
+#include<stdbool.h> /* For bool*/
+#include<stdatomic.h> /* For atomic_test_and_set*/
 
 #define THREAD_STACK 1024*64
 #define MAX_THREADS 10
 
 static int thread_count = 0;
+
+typedef struct thread_spinlock_t {
+	bool flag;
+}thread_spinlock_t;
 
 typedef struct thread_t {
 	int tid;
@@ -114,6 +120,7 @@ kernel_thread_t* removeNodeUsingPid(int pid)
 void print(){
 	kernel_thread_t *p = head;
 	do{
+		printf("* %d %d\n", p -> pid, p -> tid);
 		p = p -> next;
 	}while(p != head);
 }
@@ -125,12 +132,25 @@ int function_execution(void *execution_args) {
 }
 
 int thread_create(thread_t *thread, void *(*start_routine) (void *), void *arg) {
+	// if(thread_count == MAX_THREADS)
+	// 	return -1;
+
 	kernel_thread_t *p = newNode();
 	add(p);
+
+	// init_thread(&thread_array[thread_count]);
+
+	/*Allocating stack*/
+	// thread_array[thread_count].stack = malloc(THREAD_STACK);
+	// if(thread_array[thread_count].stack == NULL)
+	// 	return -1;
+
 	function_container *execution_args;
 	execution_args = (function_container*)malloc(sizeof(function_container));  //if error
 	execution_args->function = start_routine;
 	execution_args->arg = arg;
+
+	/*Calling clone to create thread*/
 	p -> pid = clone(&function_execution, (char*) p -> stack + THREAD_STACK, SIGCHLD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_VM, (void*)execution_args);
 	thread -> pid = p -> pid;
 	if(p -> pid == -1) {
@@ -149,23 +169,22 @@ int thread_join(thread_t thread) {
 	int i;
 	int status;
 	waitpid(thread.pid, &status, 0);
-	if(status == NULL)
+	if(&status == NULL)
 		return 0;
 	kernel_thread_t *p = removeNode(thread.tid);
+
+	free(p -> stack);
+	p -> stack = NULL;
 	free(p);
-
-	/*
-	if(deadlock)
-		return EDEADLK;
-	else if(notJoinableThread)
-		return EINVAl;
-	else if(anotherThreadAlreadyWaitingToJoinWithThisThread)
-		return EINVAL;
-	else if(noThreadWithIDThread)
-		return ESRCH;
-	*/
-
-
+	// int flag = 1;
+	// /*Restoring thread array*/
+	// for(i = 0; i < thread_count; i++) {
+	// 	if(thread_array[i].stack != NULL)
+	// 		flag = 0;	
+	// }
+	// if(flag) {
+	// 	thread_count = 0;	
+	// }
 	return 0;
 }
 
@@ -173,14 +192,68 @@ int thread_kill(thread_t thread, int signo){
 	return kill(thread.pid, signo);
 }
 
-static int nowpid;
 void thread_exit(void *retval){
-	nowpid = getpid();
+	int nowpid = getpid();
 	kernel_thread_t *p = removeNodeUsingPid(nowpid);
+	printf("\n&*\n");
+	if(p == NULL)
+		exit(0);
+
+	// if(kill(nowpid, 9) == -1)
+	// {
+	// 	retval = (void*)-1;
+	// 	return;
+	// }
+	
+	// free(p -> stack);
+	// p -> stack = NULL;
+	// retval = (void*)0;
+	// return;
+
+
+	// for(int i = 0; i < MAX_THREADS; i++){
+	// 	if(thread_array[i].pid == nowpid){
+	// 		if(kill(nowpid, 9) == -1)
+	// 		{
+
+	// 			retval = (void*)-1;
+	// 			return;
+	// 		}
+	// 		free(thread_array[i].stack);
+	// 		thread_array[i].stack = NULL;
+	// 		retval = (void*)0;
+	// 		return;
+	// 	}
+	// }
+	// Terminate the main thread
+}
+/*
+void thread_exit(void *retval){
+	int nowpid = getpid();
+	kernel_thread_t *p = removeNodeUsingPid(nowpid);
+	printf("**\n*")
 	if(p == NULL)
 		return;
-	kill(nowpid, 9);
+	if(kill(nowpid, 9) == -1)
+	{
+		retval = (void*)-1;
+		return;
+	}
+	free(p -> stack);
 	p -> stack = NULL;
 	retval = (void*)0;
-	return;
+}
+*/
+int thread_spin_init(thread_spinlock_t *lock) {
+	lock->flag = false;
+	return 0;
+}
+int thread_spin_lock(thread_spinlock_t *lock) {
+	while(atomic_flag_test_and_set(&(lock->flag)) == true);
+	return 0;
+
+}
+int thread_spin_unlock(thread_spinlock_t *lock) {
+	lock->flag = false;
+	return 0;
 }

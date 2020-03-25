@@ -4,37 +4,27 @@
 
 void* fun1(void *args){
 	int i = 0;
-	while(i < 50){
-		printf("Fun1\n");
+	while(i < 10){
+		// printf("Fun1\n");
 	
-		// Uncomment this to test thread_exit
-		/*
+		// Uncomment this to test thread_exit		
 		if(i == 5){
 			void *retval;
 			thread_exit(&retval);
 	 	}
-		*/
-
-	 // printf("%d Fun1 %d\n", i, getpid());
+	 	printf("%d Fun1\n", i);
+	 	// printf("%d Fun1 %d\n", i, getpid());
 	 i++;	
 	}
 }
 
 void* fun2(void *args){
 	int i = 0;
-	while(i < 50){
-		printf("Fun2\n");
-	 // printf("%d Fun2 %d\n", i, getpid());
+	while(i < 10){
+		// printf("Fun2\n");
+	 	printf("%d Fun2\n", i);
+	 	// printf("%d Fun2 %d\n", i, getpid());
 	 i++;
-	}
-}
-
-void* fiber1(void *ags)
-{
-	int i;
-	for ( i = 0; i < 5; ++ i )
-	{
-	 printf( "Hey, I'm fiber #1: %d\n", i );
 	}
 }
 
@@ -78,6 +68,8 @@ int main()
 {
 	/* Initialize the fiber library */
 	//initFibers();
+	init();
+
 	thread_t t1;
 	thread_t t2;
 	thread_t t3;
@@ -89,11 +81,12 @@ int main()
 	thread_create( &t1, fun1 , NULL);
 	thread_create( &t2, fun2 , NULL);
 
+	// print();
+
 	/* Since these are nonpre-emptive, we must allow them to run */
 	thread_join(t3);
 	thread_join(t1);
 	thread_join(t2);
-
 
 	//pthread_join(t3, NULL);
 	
