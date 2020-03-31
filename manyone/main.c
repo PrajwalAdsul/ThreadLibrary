@@ -86,6 +86,6 @@ int main()
 	thread_join(t2, NULL);
 	thread_join(t3, NULL);*/
 	
-	/* The program quits */
+	/* The program ends */
 	return 0;
 }
