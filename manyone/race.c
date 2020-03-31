@@ -1,5 +1,3 @@
-/* A code demonstrating the race problem
-*/
 #include "threads.c"
 #include <stdio.h>
 #include<unistd.h>
