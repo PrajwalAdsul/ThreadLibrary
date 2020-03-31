@@ -344,7 +344,7 @@ int thread_join(thread_t thread, void **np) {
 		free(temp->stack);
 	free(temp);
 	
-	/*Freeing current and stopping timer if all threads are done executing*/
+	/*Freeing current and stopping timer if all  the threads are done executing*/
 	if(isempty(ready) && isempty(completed)) {
 		struct itimerval timer = {
 			{ 0, 0 },
