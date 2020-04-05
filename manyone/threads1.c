@@ -15,6 +15,8 @@ static int thread_count = 0;
 
 jmp_buf buf[MAX_THREADS];
 
+
+
 typedef struct thread_t {
 	int tid;
 }thread_t;
@@ -114,16 +116,12 @@ int isempty(queue q) {
 void printq(queue q) {
 	user_thread_node *temp;
 	if(q.tail == NULL) {
-		//printf("\nEMPTY!\n");
 		return;
 	}
 	temp = q.head;
-	//printf("[");
 	while(temp->next != q.head) {
-		//printf("%d ", temp->tid);
 		temp = temp->next;	
 	}
-	//printf("%d]\n", temp->tid);
 	return;
 }
 
@@ -149,43 +147,23 @@ void unblock_sigalrm() {
 }
 
 void createStackForThreadandExecute(int signum) {
-	// printf("*************************\n");
 	assert(signum == SIGUSR1);
-	
 	if(setter == NULL) {
 		exit(0);	
 	}
-
 	/*Saving the current context, and returning to terminate the signal handler scope*/
 	if (setjmp(setter->context)) {
-		printf("*************************\n");
-	
 		/*Being called by scheduler for first time. Call the function*/
 		unblock_sigalrm();
-		// current->retval = current->start_routine(current->arg);
-		// if(setjmp(current->context) == 10){
-		// 	//do nothing
-		// }
-		// else{
-		// 	current->retval = current->start_routine(current->arg);
-		// }
-
-		if(setjmp(buf[current->tid]) == 10){
-			//do nothing
-			printf("qqqqqqqqqqqq\n");
+		// Used when exit is called
+		if(setjmp(buf[current->tid])){
 		}
 		else{
 			current->retval = current->start_routine(current->arg);
 		}
-
-
-		current->active = 0;
-		
+		current->active = 0;		
 		block_sigalrm();
-		//printf("\n\n\n\n");
 		printq(ready);
-		//printf("\n\n\n\n");
-
 		enqueue(&completed, current);
 		current = dequeue(&ready);
 		//unblock_sigalrm();
@@ -196,22 +174,9 @@ void createStackForThreadandExecute(int signum) {
 
 int thread_exit(void *retval){
 	block_sigalrm();
-	printf("\n\ncalled hi\n\n");
-	longjmp(buf[current -> tid], 10);
-	
-	// current -> retval = retval;
-	// current -> exit = 100;
-	// if(current -> exit == 100)
-	// {	
-	// 	printf("\n\ncurrent -> exit %d\n\n", current -> exit);
-		enqueue(&completed, current);
-		current = dequeue(&ready);
-	// }	
-	// longjmp(current->context, 10);
+	longjmp(buf[current -> tid], 1);
 	// enqueue(&completed, current);
 	// current = dequeue(&ready);
-	// user_thread_node *p = queueRemoveUsingID(&ready, current -> tid);
-	// enqueue(&completed, p);
 	unblock_sigalrm();
 }
 bool invalidSigNo(signo){
@@ -231,49 +196,24 @@ bool isThreadCompleted(int tid){
 
 int thread_kill(thread_t thread, int signo)
 {
-	// //printf("$\n");
 	block_sigalrm();
 	// If signal no is invalid then return false
 	if(invalidSigNo(signo)){
 		return EINVAL;
 	}	
-
-	// //printf("$\n");
-	// // thread is already completed
-	// if(isThreadCompleted(thread.tid)){
-	// 	// do nothing
-	// 	return 0;
-	// }
-	// //printf("$\n");
-	// enqueue(&ready, current);
-	// printq(ready);
-	// //printf("%d****\n", thread.tid);
 	if(current != NULL){
 		if(current -> tid != thread.tid){
-			current = queueRemoveUsingID(&ready, thread.tid);
-			if(current == NULL){
-				//printf("return 0\n");
-				return 0;
-			}
-			else{
-				current -> signo = signo;
-				//printf("qwqwqwqw %d\n", current -> signo);
-				enqueue(&ready, current);
-			}
+			raise(signo);
+			// current = queueRemoveUsingID(&ready, thread.tid);
+			// if(current == NULL){
+			// 	return 0;
+			// }
+			// else{
+			// 	current -> signo = signo;
+			// 	enqueue(&ready, current);
+			// }
 		}
-		// 	// //printf("%d****\n", current -> tid);
-
-		// 	// longjmp(current->context, sync_flag);
-			
-		// 	sync_flag = 2;	
-
-		// 	// //printf("pq\n");
-		// }
 	}
-	else{
-		//printf("erererer\n");
-	}
-	// raise(signo);
 	unblock_sigalrm();
 	return 1;
 }
@@ -300,7 +240,6 @@ void init_main_context() {
 	return;
 }
 
-
 void handle_sigalrm() {
 	if(setjmp(current->context) && sync_flag == 2) {
 		sync_flag = 1;	
@@ -310,16 +249,12 @@ void handle_sigalrm() {
 		int flag; 
 		if(current->tid == 0)
 			flag = 1;
-		if(current -> tid != 0 && current -> signo != -1 && current -> signo != 0){
-			// sigaddset()
-			// //printf("signo %d\n", current -> signo);
-			// //printf("####& %d\n", current -> tid);
-			raise(current -> signo);
-			current -> signo = -1;
-		}
-		// else
-			enqueue(&ready, current);
-
+		// For thread_kill 
+		// if(current -> tid != 0 && current -> signo != -1 && current -> signo != 0){
+		// 	raise(current -> signo);
+		// 	current -> signo = -1;
+		// }
+		enqueue(&ready, current);
 		current = dequeue(&ready);
 	
 		if(flag == 1 && current->tid == 0)

@@ -22,8 +22,6 @@ void *thread2(void *arg) {
 int main() {
 	thread_t th1, th2;
 	int x;
-	//sleep(2);
-	//thread_spin_init(&lock); 
 	thread_create(&th1, thread1, NULL);
 	thread_create(&th2, thread2, NULL);
 	block_sigalrm();
@@ -34,5 +32,4 @@ int main() {
 	thread_join(th2, NULL);
 	fprintf(stdout, "c = %ld c1+c2 = %ld c1 = %ld c2 = %ld timer : %d\n", c, c1+c2, c1, c2, x);
 	fflush(stdout);
-	//while(1);
 }
