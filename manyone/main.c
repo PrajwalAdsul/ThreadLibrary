@@ -7,23 +7,18 @@
 void* fun1(void *args){
 	int i = 0;
 	while(i < 10){
-		// sleep(1);
-		fprintf(stdout, "Fun1 11111\n");
-		i++;	
-		// thread_exit(NULL);
-		// sleep(10);
+		// fprintf(stdout, "Fun1 11111\n");
+		write(1, "Fun1 11111\n", 11);
+		i++;
+		int r = 100;
+		thread_exit(&r);	
 	}
 }
 
 void* fun2(void *args){
 	int i = 0;
 	while(i < 50){
-		// sleep(1);
-		// printf("Fun1 11111\n");
-		// printf("fun2\n");
 		i++;	
-		// thread_exit(&r);
-		// sleep(10);
 	}
 }
 
@@ -45,7 +40,11 @@ void* fibonacci(void *ags)
 	for( i = 2; i < 5; ++ i )
 	{
 		int nextFib = fib[0] + fib[1];
-		fprintf(stdout, "fibonacci(%d) = %d\n", i, nextFib );
+		// fprintf(stdout, "fibonacci(%d) = %d\n", i, nextFib );
+		char buf[64];
+		sprintf(buf, "fibonacci(%d) = %d\n", i, nextFib );
+		write(1, buf, sizeof(buf));
+
 		fib[0] = fib[1];
 		fib[1] = nextFib;
 		// thread_exit(NULL);
@@ -59,63 +58,24 @@ void* squares(void *ags)
 	
 	for ( i = 0; i < 3; ++ i )
 	{
-		fprintf(stdout, "%d*%d = %d\n", i, i, i*i );
+		char buf[64];
+		sprintf(buf, "%d*%d = %d\n", i, i, i*i );
+		write(1, buf, sizeof(buf));
 		// sleep(1);
 	}
 }
 
 int main()
 {
-	/* Initialize the thread library */
-
 	thread_t t1;
 	thread_t t2;
 	thread_t t3;
-	
-	// thread_create( &t1, fun1 , NULL);
-	//pthread_create( &t3, NULL, squares , NULL);
-	// void *n;
-	
-	// thread_create( &t2, fibonacci , NULL);
-	// thread_join(t1, NULL);
-	// thread_create( &t3, fibonacci , NULL);
-	
-
-	// printf("\nbefore join\n");
-	// sleep(1);
-	// thread_join(t1, &n);
-	// printf("\n&\n");
-	
-	// printf("hi\n");
-	// fprintf(stdout, "join in t1 %d\n", *(int*)(n));
-	// printf("\n&\n");
-			
-	// thread_join(t1, NULL);
-	// thread_join(t2, NULL);
-	// thread_join(t3, NULL);
-	
-	/*printf("Hello world\n");
-	sleep(2);
-	printf("Hello again\n");
-	int abc;
-	for(abc = 0; abc < 15; abc++) {
-		sleep(1);
-		printf("numb : %d\n", abc);	
-	}*/
-	// sleep(3);
-	// printf("\n\nchecking\n\n");
-
 	thread_create( &t1, fun1, NULL);
 	thread_create( &t2, squares, NULL);
 	thread_create( &t3, fibonacci, NULL);
-
-	thread_kill(t1, SIGSTOP);
-	//pthread_create( &t3, NULL, squares , NULL);
-
-	// thread_join(t1, NULL);
-	// thread_join(t2, NULL);
-	// thread_join(t3, NULL);
-	
-	/* The program ends */
+	int retval;
+	thread_join(t1, (void**)&retval);
+	printf("\njoin => %d\n", retval);
+	wait(NULL);
 	return 0;
 }

@@ -9,13 +9,11 @@
 #include<errno.h>
 
 #define THREAD_STACK (1024*64)
-#define MAX_THREADS 10
+#define MAX_THREADS 50
 
 static int thread_count = 0;
 
 jmp_buf buf[MAX_THREADS];
-
-
 
 typedef struct thread_t {
 	int tid;
@@ -59,6 +57,7 @@ int enqueue(queue *q, user_thread_node *temp) {
 	}
 	return 0;
 }
+
 user_thread_node* dequeue(queue *q) {
 	user_thread_node *temp;
 	int flag = 0;
@@ -138,7 +137,6 @@ void block_sigalrm() {
 	sigprocmask(SIG_BLOCK, &sigalrm, NULL);
 }
 
-
 void unblock_sigalrm() {
 	sigset_t sigalrm;
 	sigemptyset(&sigalrm);
@@ -174,13 +172,13 @@ void createStackForThreadandExecute(int signum) {
 
 int thread_exit(void *retval){
 	block_sigalrm();
+	current -> retval = retval;
 	longjmp(buf[current -> tid], 1);
-	// enqueue(&completed, current);
-	// current = dequeue(&ready);
 	unblock_sigalrm();
 }
+
 bool invalidSigNo(signo){
-	return false;
+	return signo < 1 || signo > 65;
 }
 
 bool isThreadCompleted(int tid){
@@ -204,14 +202,6 @@ int thread_kill(thread_t thread, int signo)
 	if(current != NULL){
 		if(current -> tid != thread.tid){
 			raise(signo);
-			// current = queueRemoveUsingID(&ready, thread.tid);
-			// if(current == NULL){
-			// 	return 0;
-			// }
-			// else{
-			// 	current -> signo = signo;
-			// 	enqueue(&ready, current);
-			// }
 		}
 	}
 	unblock_sigalrm();
@@ -249,11 +239,6 @@ void handle_sigalrm() {
 		int flag; 
 		if(current->tid == 0)
 			flag = 1;
-		// For thread_kill 
-		// if(current -> tid != 0 && current -> signo != -1 && current -> signo != 0){
-		// 	raise(current -> signo);
-		// 	current -> signo = -1;
-		// }
 		enqueue(&ready, current);
 		current = dequeue(&ready);
 	
@@ -372,6 +357,9 @@ int thread_create(thread_t *thread, void *(*start_routine) (void *), void *arg) 
 int thread_join(thread_t thread, void **np) {
 	int tid = thread.tid;
 	user_thread_node *temp;
+	
+	if(tid >= thread_count)
+		return ESRCH;
 
 	/*Checking again and again if given id is in completed queue*/
 	while(1) {
@@ -384,7 +372,7 @@ int thread_join(thread_t thread, void **np) {
 
 	/*Setting the return value once block is obtained from completed queue*/
 	if(np != NULL)
-		*np = temp->retval;
+		*np = temp -> retval;
 
 	/*Freeing the memory allocated to block*/
 	if(temp->stack != NULL)
@@ -399,10 +387,8 @@ int thread_join(thread_t thread, void **np) {
 		};
 		/*Disarming timer*/
 		setitimer(ITIMER_REAL, &timer, NULL);
-
 		free(current);
 		thread_count = 0;	
 	}
 	return tid;
 }
-
