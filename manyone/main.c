@@ -1,4 +1,4 @@
-#include "threads1.c"
+#include "threads.c"
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>       
