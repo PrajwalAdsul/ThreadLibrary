@@ -1,42 +1,7 @@
-#include<assert.h>
-#include<setjmp.h>
-#include<signal.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include<stdbool.h>
-#include<sys/time.h>
-#include<sys/resource.h>
-#include<errno.h>
-
-#define THREAD_STACK (1024*64)
-#define MAX_THREADS 50
+#include "threads.h"
 
 static int thread_count = 0;
-
 jmp_buf buf[MAX_THREADS];
-
-typedef struct thread_t {
-	int tid;
-}thread_t;
-
-typedef struct user_thread_node {
-	int tid;
-	jmp_buf context;
-	void *(*start_routine) (void *);
-	void *arg;
-	int active;
-	void *stack;
-	void *retval;
-	bool retflag;
-	struct user_thread_node *next;	
-	int signo;
-	int exit;
-}user_thread_node;
-
-typedef struct queue {
-	user_thread_node *head;
-	user_thread_node *tail;
-}queue;
 
 int init_queue(queue *q) {
 	q->head = NULL;
@@ -177,7 +142,7 @@ int thread_exit(void *retval){
 	unblock_sigalrm();
 }
 
-bool invalidSigNo(signo){
+int invalidSigNo(int signo){
 	return signo < 1 || signo > 65;
 }
 
