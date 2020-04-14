@@ -1,49 +1,8 @@
-#define _GNU_SOURCE
-#include <sched.h>
-#include <stdio.h> 
-#include <signal.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <asm-generic/errno.h>
-#include <stdbool.h> /* For bool*/
-#include <stdatomic.h> /* For atomic_test_and_set*/
-#include <setjmp.h>
-#include <errno.h>
-#define THREAD_STACK 1024*64
-#define MAX_THREADS 10
-
+#include "threads.h"
 static int thread_count = 0;
-
-bool joinwait[10][10];
-
-typedef struct thread_t {
-	int tid;
-	int pid;
-}thread_t;
-
-typedef struct function_container{
-	void *(*function)();
-	void *arg;
-}function_container;
-
-typedef struct kernel_thread_t{
-	pid_t pid;
-	int tid;
-	void *stack;
-	struct kernel_thread_t *next, *prev;
-	function_container *fcont;
-	void *retval;
-	bool retflag;  // true if value returned using return statement, false if return using thread_exit
-}kernel_thread_t;
+bool joinwait[MAX_THREADS][MAX_THREADS];
 
 kernel_thread_t *head;
-
-typedef struct thread_spinlock_t {
-	bool flag;
-}thread_spinlock_t;
 
 static int nowpid;
 
@@ -277,16 +236,20 @@ int thread_join(thread_t thread, void **np) {
 	if(&status == NULL)
 		return 0;
 	kernel_thread_t *p = removeNode(thread.tid);
-	if(p != NULL){
-		if(p -> retflag == true)
-		{
-			*np = &(p -> retval);
-		}
-		else{
-			*np = (p -> retval);
+	if(np != NULL)
+	{
+		if(p != NULL){
+			if(p -> retflag == true)
+			{
+				*np = &(p -> retval);
+			}
+			else{
+				*np = (p -> retval);
+			}
 		}
 	}
 	joinwait[waitertid][thread.tid] = false;
+	free(p);
 	/*
 	if(deadlock)
 		return EDEADLK;

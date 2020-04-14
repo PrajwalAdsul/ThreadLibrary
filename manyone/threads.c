@@ -123,6 +123,7 @@ void createStackForThreadandExecute(int signum) {
 		}
 		else{
 			current->retval = current->start_routine(current->arg);
+			current -> retflag = true;
 		}
 		current->active = 0;		
 		block_sigalrm();
@@ -273,6 +274,7 @@ int thread_create(thread_t *thread, void *(*start_routine) (void *), void *arg) 
 	temp->next = NULL;
 	temp -> signo = -1;
 	temp -> exit = 0;
+	temp -> retflag = false;
 
 	struct sigaction handler;
 	struct sigaction oldHandler;
@@ -330,14 +332,24 @@ int thread_join(thread_t thread, void **np) {
 	while(1) {
 		block_sigalrm();
 		temp = queueRemoveUsingID(&completed, tid);
-		unblock_sigalrm();
 		if(temp != NULL)
 			break;		
+		unblock_sigalrm();
 	}
 
 	/*Setting the return value once block is obtained from completed queue*/
 	if(np != NULL)
-		*np = temp -> retval;
+	{
+		if(temp != NULL){
+			if(temp -> retflag == true)
+			{
+				*np = &(temp -> retval);
+			}
+			else{
+				*np = (temp -> retval);
+			}
+		}
+	}
 
 	/*Freeing the memory allocated to block*/
 	if(temp->stack != NULL)
@@ -355,5 +367,6 @@ int thread_join(thread_t thread, void **np) {
 		free(current);
 		thread_count = 0;	
 	}
+	unblock_sigalrm();
 	return tid;
 }
