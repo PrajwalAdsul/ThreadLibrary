@@ -1,0 +1,5 @@
+To run the test files follow below instructions
+
+cc -c test1.c
+cc -c threads.c
+cc threads.o test1.o -o try
