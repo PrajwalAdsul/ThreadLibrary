@@ -3,12 +3,12 @@
 Akhil Potula (111703073), Prajwal Adsul (111703046)
 
 Tried library in all the 3 modes
-1) one-one
+1) one - one<br/>
   For each user thread there is one kernel thread
-2) many - one
+2) many - one<br/>
   For all user theads there is one kernel thread.
   Implemented using setjmp.h
-3) many - many
+3) many - many<br/>
   For all user threads there are fixed number of kernel threads
 
 Find each library code in respective libraries folder
