@@ -1,4 +1,1 @@
-# ThreadLibrary
-A thread library in C language.
-
-![ThreadLibraryLogo](https://github.com/PrajwalAdsul/ThreadLibrary/blob/master/ThreadLibraryLogo.png)
+![ThreadLibraryLogo](https://github.com/PrajwalAdsul/ThreadLibrary/blob/master/ThreadLibraryLogo.png) by Akhil Potula (111703073), Prajwal Adsul (111703046)
