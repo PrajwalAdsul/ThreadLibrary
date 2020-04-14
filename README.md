@@ -15,9 +15,9 @@ Find each library code in respective libraries folder
 
 For running test files, go to each library folder and then to testfiles folder
 select the test file you want to test and type following commands
- cc -c test.c
- cc -c threads.c
- cc test.o threads.o -o program
- ./program
+### cc -c test.c
+### cc -c threads.c
+### cc test.o threads.o -o program
+### ./program
 
 All instructed functions are done in all 3 modes. thread_kill and thread_exit not done in many-many mode.
